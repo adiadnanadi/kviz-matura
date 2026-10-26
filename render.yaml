@@ -1,21 +1,21 @@
 # Render Blueprint — automatsko podešavanje servisa
 # Korištenje: push kod na GitHub → Render Dashboard → New + → Blueprint → izaberi repo → Apply
-# (Blueprint sam kreira web servis, disk i varijable — ne trebaš ništa ručno kliktati)
+# (Blueprint sam kreira web servis i varijable — ne trebaš ništa ručno kliktati)
+#
+# NAPOMENA: free plan — baza (SQLite) je PRIVREMENA:
+#   podaci o korisnicima/napretku nestaju pri svakom redeployu/restartu,
+#   a servis se "uspava" nakon ~15 min neaktivnosti (prvi upit čeka ~30-60s).
 services:
   - type: web
     name: kviz-matura
     runtime: node
-    plan: starter            # plaćeni plan — OBAVEZAN za persistent disk (baza!)
-    region: frankfurt        # najbliži region Bosni i Hercegovini
-    disk:
-      name: kviz-baza
-      mountPath: /data       # ovdje živi SQLite fajl — preživljava redeploy i restart
-      sizeGB: 1
-    buildCommand: npx prisma generate && npm run db:push && npm run seed && npm run build
-    startCommand: npm run start
+    plan: free             # besplatan plan (nema persistent diska)
+    region: frankfurt      # najbliži region Bosni i Hercegovini
+    buildCommand: npm install --include=dev --no-audit --no-fund && npx prisma generate && npm run db:push && npm run seed && npm run build
+    startCommand: HOSTNAME=0.0.0.0 npm run start   # 0.0.0.0 obavezno — Render proxy se konektuje na loopback
     envVars:
       - key: DATABASE_URL
-        value: file:/data/custom.db
+        value: file:/opt/render/project/src/db/custom.db   # u repozitorijumu (privremeno na free planu)
       - key: AUTH_SECRET
         generateValue: true  # Render sam generiše dugi nasumični tajni ključ
       - key: NODE_VERSION
